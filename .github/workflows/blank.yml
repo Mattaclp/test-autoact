@@ -1,25 +1,42 @@
-name: lede_build
+name: N1-OpenWrt-0306v3
 
 on:
   push:
     branches: 
       - master
+#  schedule:
+#    - cron: 0 8 * * 5
+#  watch:
+#    types: [started]
 
 jobs:
   build:
     runs-on: ubuntu-18.04
     
     steps:
-    - uses: actions/checkout@v1
-    - name: Install build dependencies
+    - name: Clone Repository
+      uses: actions/checkout@v1
+    - name: Init build dependencies
+      env:
+        DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo apt-get update
-        sudo apt-get -y build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs git-core gcc-multilib g++-multilib p7zip p7zip-full msmtp libssl-dev texinfo libreadline-dev libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint ccache curl wget vim nano python python3 python-pip python3-pip python-ply python3-ply haveged lrzsz device-tree-compiler scons
+        docker rmi $(docker images -q)
+        sudo -E apt-get remove -y --purge azure-cli ghc zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* mysql* php*
+        sudo -E apt-get update -y
+        #sudo -E apt-get full-upgrade -y
+        sudo -E apt-get install -y build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs git-core gcc-8 gcc++-8 gcc-8-multilib g++-8-multilib p7zip p7zip-full msmtp libssl-dev texinfo libreadline-dev libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint ccache curl wget vim nano python python3 python-pip python3-pip python-ply python3-ply haveged lrzsz device-tree-compiler
+        sudo -E ln -sf /usr/bin/gcc-8 /usr/bin/gcc
+        sudo -E ln -sf /usr/bin/g++-8 /usr/bin/g++
+        sudo -E ln -sf /usr/bin/gcc-ar-8 /usr/bin/gcc-ar
+        sudo -E ln -sf /usr/bin/gcc-nm-8 /usr/bin/gcc-nm
+        sudo -E ln -sf /usr/bin/gcc-ranlib-8 /usr/bin/gcc-ranlib
+        sudo -E apt-get autoremove -y --purge
+        sudo -E apt-get clean -y
+        sudo -E rm -rf /usr/share/dotnet /etc/mysql /etc/php
     - name: Clone source
       run: |
         cd /home/runner
         git clone https://github.com/project-openwrt/openwrt.git
-        sudo chmod -R 777 openwrt
         sudo chown -R runner:runner openwrt
         cd /home/runner/openwrt
         ./scripts/feeds update -a 

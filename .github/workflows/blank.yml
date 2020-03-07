@@ -43,7 +43,7 @@ jobs:
         ./scripts/feeds install -a
     - name: Change theme
       run: |
-        cd /home/runner/lede/package/lean
+        cd /home/runner/openwrt/package/lean
         rm -rf luci-theme-argon
         git clone https://github.com/jerrykuku/luci-theme-argon.git
         sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' '/home/runner/openwrt/feeds/luci/collections/luci/Makefile'

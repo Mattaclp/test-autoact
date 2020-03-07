@@ -1,0 +1,44 @@
+name: lede_build
+
+on:
+  push:
+    branches: 
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get -y build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs git-core gcc-multilib g++-multilib p7zip p7zip-full msmtp libssl-dev texinfo libreadline-dev libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint ccache curl wget vim nano python python3 python-pip python3-pip python-ply python3-ply haveged lrzsz device-tree-compiler scons
+    - name: Clone source
+      run: |
+        cd /home/runner
+        git clone https://github.com/project-openwrt/openwrt.git
+        sudo chmod -R 777 openwrt
+        sudo chown -R runner:runner openwrt
+        cd /home/runner/openwrt
+        ./scripts/feeds update -a 
+        ./scripts/feeds install -a
+    - name: Change theme
+      run: |
+        cd /home/runner/lede/package/lean
+        rm -rf luci-theme-argon
+        git clone https://github.com/jerrykuku/luci-theme-argon.git
+        sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' '/home/runner/openwrt/feeds/luci/collections/luci/Makefile'
+    - name: Clone config
+      run: |
+        cd /home/runner/openwrt/
+        wget https://raw.githubusercontent.com/Mattaclp/OP-config/master/.config
+    - name: Build
+      run: | 
+        cd /home/runner/openwrt 
+        make -j2
+    - uses: actions/upload-artifact@master
+      with:
+        name: result
+        path: /home/runner/openwrt/bin
